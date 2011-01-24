@@ -44,6 +44,9 @@ namespace CefSharp
         }
 
 	internal:
+		void SetJsResult(const CefString& result);
+		void SetJsError(const CefString& error);
+
 		CefHandler::RetVal HandleAddressChange(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, const CefString& url);
         CefHandler::RetVal HandleAfterCreated(CefRefPtr<CefBrowser> browser);
         CefHandler::RetVal HandleTitleChange(CefRefPtr<CefBrowser> browser, const CefString& title);

@@ -244,6 +244,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\RunScriptFunctionHandler.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\SchemeHandler.cpp"
 				>
 			</File>
@@ -314,6 +318,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\JsFunctionHandler.h"
+				>
+			</File>
+			<File
 				RelativePath=".\JsTask.h"
 				>
 			</File>
@@ -339,6 +347,10 @@
 			</File>
 			<File
 				RelativePath=".\RtzCountdownEvent.h"
+				>
+			</File>
+			<File
+				RelativePath=".\RunScriptFunctionHandler.h"
 				>
 			</File>
 			<File

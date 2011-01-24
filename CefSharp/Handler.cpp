@@ -12,6 +12,18 @@ namespace CefSharp
 {
 	using namespace System::Runtime::InteropServices;
 
+	void Handler::RegisterSetJsResult(SetJsResultDelegate^ setJsResultDelegate)
+	{
+		_setJsResultDelegate = setJsResultDelegate;
+		_setJsResultCallback = (SetJsResultFnPtr) Marshal::GetFunctionPointerForDelegate(setJsResultDelegate).ToPointer();
+	}
+
+	void Handler::RegisterSetJsError(SetJsErrorDelegate^ setJsErrorDelegate)
+	{
+		_setJsErrorDelegate = setJsErrorDelegate;
+		_setJsErrorCallback = (SetJsErrorFnPtr) Marshal::GetFunctionPointerForDelegate(setJsErrorDelegate).ToPointer();
+	}
+
 	void Handler::RegisterAfterCreated(HandleAfterCreatedDelegate^ afterCreatedDelegate)
 	{
 		_afterCreatedDelegate = afterCreatedDelegate;
@@ -64,6 +76,18 @@ namespace CefSharp
 	{
 		_beforeResourceLoadDelegate = beforeResourceLoadDelegate;
 		_beforeResourceLoadCallback = (HandleBeforeResourceLoadFnPtr) Marshal::GetFunctionPointerForDelegate(beforeResourceLoadDelegate).ToPointer();
+	}
+
+	void Handler::SetJsResult(const CefString& result)
+	{
+		if (_setJsResultCallback != NULL)
+			_setJsResultCallback(result);
+	}
+
+	void Handler::SetJsError(const CefString& error)
+	{
+		if (_setJsErrorCallback != NULL)
+			_setJsErrorCallback(error);
 	}
 
 	CefHandler::RetVal Handler::HandleAfterCreated(CefRefPtr<CefBrowser> browser)
@@ -122,6 +146,13 @@ namespace CefSharp
 
     CefHandler::RetVal Handler::HandleJSBinding(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefV8Value> object)
 	{
+		/* special case - run script support */
+		CefRefPtr<CefV8Value> doneFunction = CefV8Value::CreateFunction(RunScriptFunctionHandler::DONE_FUNC_NAME, static_cast<CefRefPtr<CefV8Handler>>(_runScriptHandler));
+		object->SetValue(RunScriptFunctionHandler::DONE_FUNC_NAME, doneFunction);
+
+		CefRefPtr<CefV8Value> errFunction = CefV8Value::CreateFunction(RunScriptFunctionHandler::ERR_FUNC_NAME, static_cast<CefRefPtr<CefV8Handler>>(_runScriptHandler));
+		object->SetValue(RunScriptFunctionHandler::ERR_FUNC_NAME, errFunction);
+
 		if (_jsBindingCallback != NULL)
 			return _jsBindingCallback(browser, frame, object);
 

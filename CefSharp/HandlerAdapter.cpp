@@ -15,6 +15,7 @@ namespace CefSharp
 	HandlerAdapter::HandlerAdapter(CefWebBrowser^ browserControl) : _browserControl(browserControl)
 	{
 		_handler = new Handler();
+		// _handler->AddRef(); /* todo: should add-ref here, but it doesn't get cleaned up properly. */
 		_handler->RegisterAfterCreated(gcnew HandleAfterCreatedDelegate(this, &HandlerAdapter::HandleAfterCreated));
 		_handler->RegisterTitleChange(gcnew HandleTitleChangeDelegate(this, &HandlerAdapter::HandleTitleChange));
 		_handler->RegisterAdressChange(gcnew HandleAddressChangeDelegate(this, &HandlerAdapter::HandleAddressChange));
@@ -24,6 +25,18 @@ namespace CefSharp
 		_handler->RegisterBeforeResourceLoad(gcnew HandleBeforeResourceLoadDelegate(this, &HandlerAdapter::HandleBeforeResourceLoad));
 		_handler->RegisterJSBinding(gcnew HandleJSBindingDelegate(this, &HandlerAdapter::HandleJSBinding));
 		_handler->RegisterConsoleMessage(gcnew HandleConsoleMessageDelegate(this, &HandlerAdapter::HandleConsoleMessage));
+		_handler->RegisterSetJsResult(gcnew SetJsResultDelegate(this, &HandlerAdapter::SetJsResult));
+		_handler->RegisterSetJsError(gcnew SetJsErrorDelegate(this, &HandlerAdapter::SetJsError));
+	}
+
+	void HandlerAdapter::SetJsResult(const CefString& result)
+	{
+		_browserControl->SetJsResult(toClr(result));
+	}
+
+	void HandlerAdapter::SetJsError(const CefString& error)
+	{
+		_browserControl->SetJsError(toClr(error));
 	}
 
 	CefHandler::RetVal HandlerAdapter::HandleAfterCreated(CefRefPtr<CefBrowser> browser)

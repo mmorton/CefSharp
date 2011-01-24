@@ -23,8 +23,9 @@ namespace CefSharp
 
         String^ _address;
         String^ _title;
-        String^ _jsResult;
-        bool _jsError;
+        String^ _jsResult;        
+		String^ _jsErrorMessage;
+		bool _jsError;
 
         IBeforeResourceLoad^ _beforeResourceLoadHandler;
 		HandlerAdapter^ _handlerAdapter;
@@ -52,6 +53,7 @@ namespace CefSharp
         
         void SetJsResult(String^ result);
         void SetJsError();
+		void SetJsError(String^ error);
         void RaiseConsoleMessage(String^ message, String^ source, int line);
 
     private:

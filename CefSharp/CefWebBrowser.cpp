@@ -67,9 +67,10 @@ namespace CefSharp
 
         
         _jsError = false;
-        _jsResult = nullptr;
-/*
-        script = 
+		_jsErrorMessage = nullptr;
+        _jsResult = nullptr;		
+
+		script = 
             "(function() {"
             "   try { "
             "      __js_run_done(" + script + ");"
@@ -77,8 +78,24 @@ namespace CefSharp
             "      __js_run_err(e);"
             "   }"
             "})();";
-*/
+
         
+        CefString scriptStr = toNative(script);
+        CefString scriptUrlStr = toNative(scriptUrl);
+        
+        _handlerAdapter->GetCefBrowser()->GetMainFrame()->ExecuteJavaScript(scriptStr, scriptUrlStr, startLine);
+        if(!_runJsFinished->WaitOne(timeout))
+        {
+            throw gcnew TimeoutException(L"Timed out waiting for JavaScript to return");
+        }
+
+        if(_jsErrorMessage == nullptr) 
+        {
+            return _jsResult;
+        }
+        throw gcnew ScriptException(_jsErrorMessage);
+
+        /*
         CefRefPtr<JsTask> task = new JsTask(this, toNative(script), toNative(scriptUrl), startLine);
         _handlerAdapter->GetCefBrowser()->GetMainFrame()->ExecuteJavaScriptTask(static_cast<CefRefPtr<CefV8Task>>(task));
 
@@ -92,6 +109,7 @@ namespace CefSharp
             return _jsResult;
         }
         throw gcnew ScriptException("An error occurred during javascript execution");
+		*/
     }
 
     void CefWebBrowser::OnInitialized()
@@ -205,6 +223,13 @@ namespace CefSharp
     void CefWebBrowser::SetJsError()
     {
         _jsError = true;
+        _runJsFinished->Set();
+    }
+	
+    void CefWebBrowser::SetJsError(String^ error)
+    {
+		_jsError = true;
+        _jsErrorMessage = error;
         _runJsFinished->Set();
     }
 

@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #pragma once
 
+#include "RunScriptFunctionHandler.h"
+
 namespace CefSharp
 {
     using namespace System;
@@ -34,6 +36,9 @@ namespace CefSharp
 	delegate CefHandler::RetVal HandleKeyEventDelegate(CefRefPtr<CefBrowser> browser, CefHandler::KeyEventType type, int code, int modifiers, bool isSystemKey);
 	delegate CefHandler::RetVal HandleFindResultDelegate(CefRefPtr<CefBrowser> browser, int identifier, int count, const CefRect& selectionRect, int activeMatchOrdinal, bool finalUpdate);
 
+	delegate void SetJsResultDelegate(const CefString& result);
+	delegate void SetJsErrorDelegate(const CefString& error);
+
 	typedef CefHandler::RetVal (__stdcall *HandleAddressChangeFnPtr)(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, const CefString& url);
 	typedef CefHandler::RetVal (__stdcall *HandleAfterCreatedFnPtr)(CefRefPtr<CefBrowser> browser);
 	typedef CefHandler::RetVal (__stdcall *HandleTitleChangeFnPtr)(CefRefPtr<CefBrowser> browser, const CefString& title);
@@ -62,11 +67,15 @@ namespace CefSharp
 	typedef CefHandler::RetVal (__stdcall *HandleKeyEventFnPtr)(CefRefPtr<CefBrowser> browser, CefHandler::KeyEventType type, int code, int modifiers, bool isSystemKey);
 	typedef CefHandler::RetVal (__stdcall *HandleFindResultFnPtr)(CefRefPtr<CefBrowser> browser, int identifier, int count, const CefRect& selectionRect, int activeMatchOrdinal, bool finalUpdate);
 
+	typedef void (__stdcall *SetJsResultFnPtr)(const CefString& result);
+	typedef void (__stdcall *SetJsErrorFnPtr)(const CefString& result);
+
 	class Handler : public CefThreadSafeBase<CefHandler>
     {
 	private:
 		HWND _browserHwnd;
 		CefRefPtr<CefBrowser> _cefBrowser;
+		CefRefPtr<RunScriptFunctionHandler> _runScriptHandler;
 
 		gcroot<HandleAddressChangeDelegate^> _addressChangeDelegate;
 		gcroot<HandleAfterCreatedDelegate^> _afterCreatedDelegate;
@@ -77,6 +86,8 @@ namespace CefSharp
 		gcroot<HandleBeforeResourceLoadDelegate^> _beforeResourceLoadDelegate;
 		gcroot<HandleJSBindingDelegate^> _jsBindingDelegate;
 		gcroot<HandleConsoleMessageDelegate^> _consoleMessageDelegate;
+		gcroot<SetJsResultDelegate^> _setJsResultDelegate;
+		gcroot<SetJsErrorDelegate^> _setJsErrorDelegate;
 
 		HandleAddressChangeFnPtr _addressChangeCallback;
 		HandleAfterCreatedFnPtr _afterCreatedCallback;
@@ -87,6 +98,8 @@ namespace CefSharp
 		HandleBeforeResourceLoadFnPtr _beforeResourceLoadCallback;
 		HandleJSBindingFnPtr _jsBindingCallback;
 		HandleConsoleMessageFnPtr _consoleMessageCallback;
+		SetJsResultFnPtr _setJsResultCallback;
+		SetJsErrorFnPtr _setJsErrorCallback;
 
 	public:
 		Handler()
@@ -100,9 +113,12 @@ namespace CefSharp
 			_beforeResourceLoadCallback = NULL;
 			_jsBindingCallback = NULL;
 			_consoleMessageCallback = NULL;
+			_setJsResultCallback = NULL;
+			_setJsErrorCallback = NULL;
+
+			_runScriptHandler = new RunScriptFunctionHandler(this);
 		}
 
-		// todo: verify this is getting cleaned up
 		~Handler()
 		{
 			_addressChangeDelegate = nullptr;
@@ -114,6 +130,10 @@ namespace CefSharp
 			_beforeResourceLoadDelegate = nullptr;
 			_jsBindingDelegate = nullptr;
 			_consoleMessageDelegate = nullptr;
+			_setJsResultDelegate = nullptr;
+			_setJsErrorDelegate = nullptr;
+
+			_runScriptHandler = nullptr;
 		}
 
 		void RegisterAdressChange(HandleAddressChangeDelegate^ addressChangeDelegate);
@@ -125,6 +145,11 @@ namespace CefSharp
 		void RegisterJSBinding(HandleJSBindingDelegate^ jsBindingDelegate);
 		void RegisterConsoleMessage(HandleConsoleMessageDelegate^ consoleMessageDelegate);
 		void RegisterBeforeResourceLoad(HandleBeforeResourceLoadDelegate^ beforeResourceLoadDelegate);
+		void RegisterSetJsResult(SetJsResultDelegate^ setJsResultDelegate);
+		void RegisterSetJsError(SetJsErrorDelegate^ setJsErrorDelegate);
+
+		virtual void SetJsResult(const CefString& result);
+		virtual void SetJsError(const CefString& error);
 
 		virtual RetVal HandleAddressChange(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, const CefString& url);
         virtual RetVal HandleAfterCreated(CefRefPtr<CefBrowser> browser);
